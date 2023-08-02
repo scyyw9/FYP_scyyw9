@@ -91,7 +91,7 @@ class SwinTransformerFPN(nn.Module):
             blk.H, blk.W = H, W
             x = blk(x, attn_mask)  # H/8, W/8, 2C
 
-        feat_map3 = x.view(x.shape[0], H, W, x.shape[2])
+        feat_map3 = x.view(x.shape[0], x.shape[2], H, W)
         feat['map3'] = feat_map3
 
         # stage 2 downsample
@@ -103,7 +103,7 @@ class SwinTransformerFPN(nn.Module):
             blk.H, blk.W = H, W
             x = blk(x, attn_mask)  # H/16, W/16, 4C
 
-        feat_map4 = x.view(x.shape[0], H, W, x.shape[2])
+        feat_map4 = x.view(x.shape[0], x.shape[2], H, W)
         feat['map4'] = feat_map4
 
         return feat

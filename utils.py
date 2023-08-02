@@ -13,7 +13,7 @@ matplotlib.use('agg')
 MAPS = ['map3', 'map4']
 Scales = [0.9, 1.1]
 MIN_HW = 384
-TRAN_MAX_HW = 576
+# TRAN_MAX_HW = 576
 MAX_HW = 1584
 IM_NORM_MEAN = [0.485, 0.456, 0.406]
 IM_NORM_STD = [0.229, 0.224, 0.225]
@@ -326,19 +326,17 @@ class resizeImageWithGT(object):
     No resizing is done if both height and width are smaller than the specified value
     """
 
-    def __init__(self, MAX_HW=528):
+    def __init__(self, MAX_HW=1504):
         self.max_hw = MAX_HW
 
     def __call__(self, sample):
         image, lines_boxes, density = sample['image'], sample['lines_boxes'], sample['gt_density']
 
         W, H = image.size
-        if W > self.max_hw or H > self.max_hw or W % 24 != 0 or H % 24 != 0:
-            scale_factor = 1.0
-            if W > self.max_hw or H > self.max_hw:
-                scale_factor = float(self.max_hw) / max(H, W)
-            new_H = 24 * int(H * scale_factor / 24)
-            new_W = 24 * int(W * scale_factor / 24)
+        if W > self.max_hw or H > self.max_hw:
+            scale_factor = float(self.max_hw) / max(H, W)
+            new_H = 8 * int(H * scale_factor / 8)
+            new_W = 8 * int(W * scale_factor / 8)
             resized_image = transforms.Resize((new_H, new_W))(image)
             resized_density = cv2.resize(density, (new_W, new_H))
             orig_count = np.sum(density)
@@ -368,7 +366,7 @@ Normalize = transforms.Compose([transforms.ToTensor(),
                                 transforms.Normalize(mean=IM_NORM_MEAN, std=IM_NORM_STD)])
 Transform = transforms.Compose([resizeImage(MAX_HW)])
 TransformTrain = transforms.Compose([dataAugmentation(),
-                                     resizeImageWithGT(TRAN_MAX_HW)])
+                                     resizeImageWithGT(MAX_HW)])
 
 
 def denormalize(tensor, means=IM_NORM_MEAN, stds=IM_NORM_STD):

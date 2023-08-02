@@ -101,7 +101,6 @@ class PatchEmbed(nn.Module):
         _, _, H, W = x.shape
 
         # padding
-        # 如果输入图片的H，W不是patch_size的整数倍，需要进行padding
         pad_input = (H % self.patch_size[0] != 0) or (W % self.patch_size[1] != 0)
         if pad_input:
             # to pad the last 3 dimensions,
@@ -144,12 +143,12 @@ class PatchMerging(nn.Module):
         x = x.view(B, H, W, C)
 
         # padding
-        # 如果输入feature map的H，W不是2的整数倍，需要进行padding
+        #需要进行padding
         pad_input = (H % 2 == 1) or (W % 2 == 1)
         if pad_input:
             # to pad the last 3 dimensions, starting from the last dimension and moving forward.
             # (C_front, C_back, W_left, W_right, H_top, H_bottom)
-            # 注意这里的Tensor通道是[B, H, W, C]，所以会和官方文档有些不同
+            # Tensor shape[B, H, W, C]
             x = F.pad(x, (0, 0, 0, W % 2, 0, H % 2))
 
         x0 = x[:, 0::2, 0::2, :]  # [B, H/2, W/2, C]
@@ -332,7 +331,6 @@ class SwinTransformerBlock(nn.Module):
         x = x.view(B, H, W, C)
 
         # pad feature maps to multiples of window size
-        # 把feature map给pad到window size的整数倍
         pad_l = pad_t = 0
         pad_r = (self.window_size - W % self.window_size) % self.window_size
         pad_b = (self.window_size - H % self.window_size) % self.window_size
@@ -364,7 +362,6 @@ class SwinTransformerBlock(nn.Module):
             x = shifted_x
 
         if pad_r > 0 or pad_b > 0:
-            # 把前面pad的数据移除掉
             x = x[:, :H, :W, :].contiguous()
 
         x = x.view(B, H * W, C)
@@ -428,10 +425,8 @@ class BasicLayer(nn.Module):
 
     def create_mask(self, x, H, W):
         # calculate attention mask for SW-MSA
-        # 保证Hp和Wp是window_size的整数倍
         Hp = int(np.ceil(H / self.window_size)) * self.window_size
         Wp = int(np.ceil(W / self.window_size)) * self.window_size
-        # 拥有和feature map一样的通道排列顺序，方便后续window_partition
         img_mask = torch.zeros((1, Hp, Wp, 1), device=x.device)  # [1, Hp, Wp, 1]
         h_slices = (slice(0, -self.window_size),
                     slice(-self.window_size, -self.shift_size),
@@ -519,8 +514,6 @@ class SwinTransformer(nn.Module):
         # build layers
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
-            # 注意这里构建的stage和论文图中有些差异
-            # 这里的stage不包含该stage的patch_merging层，包含的是下个stage的
             layers = BasicLayer(dim=int(embed_dim * 2 ** i_layer),
                                 depth=depths[i_layer],
                                 num_heads=num_heads[i_layer],

@@ -194,14 +194,14 @@ for epoch in range(0, args.epochs):
     regressor.eval()
     val_mae, val_rmse = eval()
     stats.append((train_loss, train_mae, train_rmse, val_mae, val_rmse))
-    stats_file = join(args.output_dir, "stats" + ".txt")
+    stats_file = join(args.output_dir, "trans_stats" + ".txt")
     with open(stats_file, 'w') as f:
         for s in stats:
             f.write("%s\n" % ','.join([str(x) for x in s]))    
     if best_mae >= val_mae:
         best_mae = val_mae
         best_rmse = val_rmse
-        model_name = args.output_dir + '/' + "FamNet_1.pth"
+        model_name = args.output_dir + '/' + "trans_FamNet_1.pth"
         torch.save(regressor.state_dict(), model_name)
 
     print("Epoch {}, Avg. Epoch Loss: {} Train MAE: {} Train RMSE: {} Val MAE: {} Val RMSE: {} Best Val MAE: {} Best "
